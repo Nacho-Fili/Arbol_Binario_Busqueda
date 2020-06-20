@@ -279,17 +279,19 @@ void probar_crear(tester_t* tester, int* elementos_arbol[4]){
 
 void probar_raiz(tester_t* tester, int* elementos_arbol[4]) {
   int a = 1, b = 2;
-
+  int insercion_correcta;
   abb_t* arbol = NULL;
   tester_afirmar(tester, "Pedir la raíz de un árbol NULL devuelve NULL", !arbol_raiz(arbol));
 
   arbol = arbol_crear(comparador, NULL);
   tester_afirmar(tester, "Pedir la raiz de un árbol vacío devuelve NULL", !arbol_raiz(arbol));
 
-  arbol_insertar(arbol, &a);
+  insercion_correcta = arbol_insertar(arbol, &a);
+  tester_avisar(tester, "Falló la inserción", insercion_correcta == ERROR);
   tester_afirmar(tester, "Luego de insertar un elemento en el árbol, la raiz es la esperada", *(int*)arbol_raiz(arbol) == a);
 
-  arbol_insertar(arbol, &b);
+  insercion_correcta = arbol_insertar(arbol, &b);
+  tester_avisar(tester, "Falló la inserción", insercion_correcta == ERROR);
   tester_afirmar(tester, "Luego de insertar otro elemento en el árbol, la raiz sigue siendo la misma", *(int*)arbol_raiz(arbol) == a);
 
   arbol_destruir(arbol);
@@ -299,10 +301,17 @@ void probar_arbol_vacio(tester_t* tester, int* elementos_arbol[4]){
   int a = 10;
   abb_t* arbol = arbol_crear(comparador, NULL);
 
+  int insercion_correcta;
+  int borrado_correcto;
+
   tester_afirmar(tester, "Arbol se crea vacío", arbol_vacio(arbol));
-  arbol_insertar(arbol, &a);
+
+  insercion_correcta = arbol_insertar(arbol, &a);
+  tester_avisar(tester, "Falló la inserción", insercion_correcta == ERROR);
   tester_afirmar(tester, "Arbol no está vacío luego de una inserción", !arbol_vacio(arbol));
-  arbol_borrar(arbol, &a);
+
+  borrado_correcto = arbol_borrar(arbol, &a);
+  tester_avisar(tester, "Falló el borrado", borrado_correcto == ERROR);
   tester_afirmar(tester, "Arbol vuelve a estar vacío si borro el elemento insertado", arbol_vacio(arbol));
 
   arbol_destruir(arbol);
@@ -389,7 +398,7 @@ void probar_buscar(tester_t* tester, int* elementos_arbol[4]){
   abb_t* arbol = arbol_crear(comparador, NULL);
   size_t elementos_insertados = llenar_arbol(arbol, elementos_arbol[ORDEN_INSERCION], ELEMENTOS_ARBOL_PRUEBA);
   tester_avisar(tester, "El árbol no cuenta con la cantidad esperada de elementos", elementos_insertados != ELEMENTOS_ARBOL_PRUEBA);
-  int elementos_a_buscar[5] = { 50, 80, 57, 42, 100 };
+  int elementos_a_buscar[5] = { 50, 80, 57, 42, 100 }; //Eleccion arbitraria
 
   tester_afirmar(tester, "Buscar en árbol NULL devuelve NULL", !arbol_buscar(NULL, elementos_a_buscar));
   tester_afirmar(tester, "Puedo obtener el elemento en la raíz", *(int*)arbol_buscar(arbol, elementos_a_buscar) == elementos_a_buscar[0]);
@@ -433,9 +442,11 @@ void probar_recorridos(tester_t* tester, int* elementos_arbol[4], size_t element
   }
 
   printf("\n\tÁrbol en preorden:\n");
+
   imprimir_array(array_preorden, elementos_a_cargar);
   elementos_en_posicion_preorden = comparar_arrays(elementos_arbol[PREORDEN], array_preorden, elementos_a_cargar, errores_preorden, comparador, sizeof(int));
   tester_afirmar(tester, "Recorrido inorden con salida esperada", elementos_en_posicion_preorden == elementos_a_cargar);
+
   if(elementos_en_posicion_preorden != elementos_a_cargar){
     for(size_t j = 0; j < elementos_a_cargar - elementos_en_posicion_preorden; j++){
       printf("Error en la iteración %li: se esperaba un %i y había un %i", j, elementos_arbol[PREORDEN][errores_preorden[j]], **(int**)(array_preorden + errores_preorden[j]));
@@ -443,9 +454,11 @@ void probar_recorridos(tester_t* tester, int* elementos_arbol[4], size_t element
   }
 
   printf("\n\tÁrbol en postorden:\n");
+
   imprimir_array(array_postorden, elementos_a_cargar);
   elementos_en_posicion_postorden = comparar_arrays(elementos_arbol[POSTORDEN], array_postorden, elementos_a_cargar, errores_postorden, comparador, sizeof(int));
   tester_afirmar(tester, "Recorrido inorden con salida esperada", elementos_en_posicion_postorden == elementos_a_cargar);
+  
   if(elementos_en_posicion_postorden != elementos_a_cargar){
     for(size_t k = 0; k < elementos_a_cargar - elementos_en_posicion_postorden; k++){
       printf("Error en la iteración %li: se esperaba un %i y había un %i", k, elementos_arbol[INORDEN][errores_postorden[k]], **(int**)(array_postorden + errores_postorden[k]));
