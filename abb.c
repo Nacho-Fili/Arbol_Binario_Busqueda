@@ -51,12 +51,14 @@ int cantidad_hijos(nodo_abb_t* nodo){
  *	Recibe un nodo raíz e inserta de forma recursiva el elemento en la posición
  * correspondiente, valiéndose del comparador. Devuelve el nodo raíz.
  */
-nodo_abb_t* nodo_insertar(nodo_abb_t* nodo_raiz, abb_comparador comparador, void* elemento){
+nodo_abb_t* nodo_insertar(nodo_abb_t* nodo_raiz, abb_comparador comparador, void* elemento, bool* pudo_insertar){
 
   if(!nodo_raiz){
     nodo_raiz = calloc(1, sizeof(nodo_abb_t));
-    if(!nodo_raiz)
-      return NULL;
+    if(!nodo_raiz){
+			*pudo_insertar = false;
+			return NULL;
+		}
 
     nodo_raiz -> elemento = elemento;
     nodo_raiz -> izquierda = NULL;
@@ -64,10 +66,10 @@ nodo_abb_t* nodo_insertar(nodo_abb_t* nodo_raiz, abb_comparador comparador, void
   }
 
   else if(comparador(nodo_raiz -> elemento, elemento) == SEGUNDO_MENOR)
-    nodo_raiz -> izquierda = nodo_insertar(nodo_raiz -> izquierda, comparador, elemento);
+    nodo_raiz -> izquierda = nodo_insertar(nodo_raiz -> izquierda, comparador, elemento, pudo_insertar);
 
   else
-    nodo_raiz -> derecha = nodo_insertar(nodo_raiz -> derecha, comparador, elemento);
+    nodo_raiz -> derecha = nodo_insertar(nodo_raiz -> derecha, comparador, elemento, pudo_insertar);
 
   return nodo_raiz;
 }
@@ -125,6 +127,7 @@ void recorrer_nodos(nodo_abb_t* nodo_raiz, int recorrido, int* elementos_cargado
 	 *orden que se deben recorrer según el recorrido pedido
 	 */
 
+	//Siempre pregunto si estoy ante el nodo raíz, ya que si es el caso lo debo cargar
 	(raiz_e_hijos[0] != nodo_raiz) ?
 		recorrer_nodos(raiz_e_hijos[0], recorrido, elementos_cargados, array, tamanio_array) :
 		cargar_elemento(raiz_e_hijos[0], array, elementos_cargados);
@@ -182,6 +185,7 @@ nodo_abb_t* buscar_predecesor_inorden(nodo_abb_t* nodo_raiz){
 	else if(!(nodo_raiz -> derecha -> derecha)){
 		//Guardo la referencia al predecesor inorden
 		predecesor_inorden = nodo_raiz -> derecha;
+
 		//Salvo la referencia del hijo del predecesor_inorden
 		nodo_raiz -> derecha = predecesor_inorden -> izquierda;
 	}
@@ -225,6 +229,7 @@ nodo_abb_t* arbol_borrar_rec(nodo_abb_t* nodo_raiz, void* elemento, abb_t* arbol
 		nodo_abb_t* predecesor_inorden = buscar_predecesor_inorden(nodo_raiz -> izquierda);
 
 		predecesor_inorden -> derecha = nodo_raiz -> derecha;
+		//reviso que el predecesor inorden no sea el hijo izquierdo para evitar que se apunte a sí mismo
 		if(predecesor_inorden != nodo_raiz -> izquierda)
 			predecesor_inorden -> izquierda = nodo_raiz -> izquierda;
 
@@ -294,7 +299,7 @@ bool abb_con_cada_nodo(nodo_abb_t* nodo_raiz, int recorrido, bool (*funcion)(voi
 
 	}
 	else
-	return false;
+		return false;
 
 	return hay_que_parar;
 }
@@ -350,9 +355,10 @@ int arbol_insertar(abb_t* arbol, void* elemento){
   if(!arbol)
     return ERROR;
 
-	arbol -> nodo_raiz = nodo_insertar(arbol -> nodo_raiz, arbol -> comparador, elemento);
+	bool pudo_insertar = true;
+	arbol -> nodo_raiz = nodo_insertar(arbol -> nodo_raiz, arbol -> comparador, elemento, &pudo_insertar);
 
-  return EXITO;
+  return pudo_insertar ? EXITO : ERROR;
 }
 
 int arbol_borrar(abb_t* arbol, void* elemento){
